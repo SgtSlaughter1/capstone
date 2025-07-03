@@ -11,7 +11,20 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { User, Heart, Plus, Star, Calendar, Edit } from "lucide-react";
+import {
+  User,
+  Heart,
+  Plus,
+  Star,
+  Calendar,
+  Edit,
+  Users,
+  UserPlus,
+  Activity,
+  Settings,
+  TrendingUp,
+  Eye,
+} from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 import axios from "axios";
 
@@ -112,11 +125,11 @@ const Profile = () => {
         );
       }
     };
-    if (isAuthenticated && user) {
+    if (isAuthenticated && currentUser) {
       fetchProfile();
       fetchSocial();
     }
-  }, [userId, isAuthenticated, currentUser]);
+  }, [userId, isAuthenticated, currentUser, viewingOwnProfile]);
 
   const handleGenreToggle = (genreId: number) => {
     setForm((prev) => ({
@@ -176,15 +189,25 @@ const Profile = () => {
   if (!isAuthenticated || !user) {
     return (
       <Layout>
-        <div className='bg-gray-900 min-h-screen flex items-center justify-center'>
-          <div className='text-center'>
-            <User className='h-16 w-16 text-gray-600 mx-auto mb-4' />
-            <h2 className='text-2xl font-bold text-white mb-4'>Please Login</h2>
-            <p className='text-gray-400 mb-6'>
-              You need to be logged in to view your profile
+        <div className='bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 min-h-screen flex items-center justify-center'>
+          <div className='text-center py-20'>
+            <div className='relative mb-8'>
+              <div className='w-32 h-32 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-2xl'>
+                <User className='h-16 w-16 text-white' />
+              </div>
+              <div className='absolute inset-0 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-full animate-pulse'></div>
+            </div>
+            <h2 className='text-4xl md:text-5xl font-bold text-white mb-6'>
+              Access Your <span className='text-blue-500'>Profile</span>
+            </h2>
+            <p className='text-gray-300 mb-8 max-w-2xl mx-auto text-lg leading-relaxed'>
+              Please login to view your profile, manage your collection, and
+              track your movie journey
             </p>
             <Link to='/login'>
-              <Button className='bg-red-600 hover:bg-red-700'>Login</Button>
+              <Button className='bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-3 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105'>
+                Login to Continue
+              </Button>
             </Link>
           </div>
         </div>
@@ -202,234 +225,339 @@ const Profile = () => {
       icon: Heart,
       label: "Favorites",
       value: favorites.length,
-      color: "text-red-500",
+      color: "from-red-500 to-pink-500",
+      bgColor: "from-red-500/10 to-pink-500/10",
+      iconColor: "text-red-500",
     },
     {
       icon: Plus,
       label: "Watchlist",
       value: watchlistCount,
-      color: "text-blue-500",
+      color: "from-blue-500 to-cyan-500",
+      bgColor: "from-blue-500/10 to-cyan-500/10",
+      iconColor: "text-blue-500",
     },
     {
       icon: Star,
       label: "Reviews",
       value: 0,
-      color: "text-yellow-500",
+      color: "from-yellow-500 to-orange-500",
+      bgColor: "from-yellow-500/10 to-orange-500/10",
+      iconColor: "text-yellow-500",
     },
   ];
 
   return (
     <Layout>
-      <div className='bg-gray-900 min-h-screen'>
-        <div className='max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8'>
-          {/* Profile Header */}
-          <Card className='bg-gray-800 border-gray-700 mb-8'>
-            <CardHeader>
-              <div className='flex items-center space-x-4'>
-                <Avatar className='h-20 w-20 bg-red-600'>
-                  <AvatarFallback className='text-white text-2xl font-bold'>
-                    {user.username.charAt(0).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-                <div className='flex-1'>
-                  <CardTitle className='text-2xl text-white mb-2'>
-                    {user.username}
-                  </CardTitle>
-                  <CardDescription className='text-gray-400 mb-4'>
-                    {user.email}
-                  </CardDescription>
-                  <div className='flex items-center space-x-4 text-sm text-gray-500'>
-                    <div>
-                      <span className='font-bold text-white'>
-                        {(followers || []).length}
-                      </span>{" "}
-                      Followers
-                    </div>
-                    <div>
-                      <span className='font-bold text-white'>
-                        {(following || []).length}
-                      </span>{" "}
-                      Following
-                    </div>
-                  </div>
-                  {!viewingOwnProfile && (
-                    <Button
-                      variant={isFollowing ? "outline" : "default"}
-                      className={`ml-4 ${isFollowing ? "border-gray-600 text-gray-300 hover:bg-gray-700" : "bg-blue-600 hover:bg-blue-700 text-white"}`}
-                      onClick={handleFollowToggle}
-                    >
-                      {isFollowing ? "Unfollow" : "Follow"}
-                    </Button>
-                  )}
-                  <div className='flex items-center space-x-2 text-sm text-gray-500 mt-2'>
-                    <Calendar className='h-4 w-4' />
-                    <span>Member since {joinDate}</span>
+      <div className='bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 min-h-screen'>
+        {/* Hero Section */}
+        <div className='relative overflow-hidden'>
+          <div className='absolute inset-0 bg-gradient-to-r from-blue-600/20 to-purple-600/20'></div>
+          <div className='absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(59,130,246,0.15)_0%,_transparent_50%)]'></div>
+          <div className='relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12'>
+            {/* Profile Header */}
+            <div className='bg-gray-800/50 backdrop-blur-sm rounded-3xl p-8 border border-gray-700/50 mb-8'>
+              <div className='flex flex-col lg:flex-row items-center lg:items-start space-y-6 lg:space-y-0 lg:space-x-8'>
+                <div className='relative'>
+                  <Avatar className='h-32 w-32 bg-gradient-to-r from-blue-600 to-purple-600 ring-4 ring-blue-500/30'>
+                    <AvatarFallback className='text-white text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600'>
+                      {user.username.charAt(0).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className='absolute -bottom-2 -right-2 w-8 h-8 bg-green-500 rounded-full border-4 border-gray-800 flex items-center justify-center'>
+                    <div className='w-3 h-3 bg-white rounded-full'></div>
                   </div>
                 </div>
-                <Button
-                  variant='outline'
-                  className='border-gray-600 text-gray-300 hover:bg-gray-700'
-                  onClick={handleEditClick}
-                >
-                  <Edit className='h-4 w-4 mr-2' />
-                  Edit Profile
-                </Button>
-              </div>
-            </CardHeader>
-          </Card>
 
-          {/* Stats */}
-          <div className='grid grid-cols-1 md:grid-cols-3 gap-6 mb-8'>
+                <div className='flex-1 text-center lg:text-left'>
+                  <h1 className='text-4xl md:text-5xl font-bold text-white mb-4'>
+                    {user.username}
+                  </h1>
+                  <p className='text-gray-300 text-lg mb-6 max-w-2xl'>
+                    {user.email}
+                  </p>
+
+                  <div className='flex flex-wrap justify-center lg:justify-start items-center gap-6 mb-6'>
+                    <div className='flex items-center space-x-2'>
+                      <Users className='h-5 w-5 text-blue-400' />
+                      <span className='text-white font-semibold'>
+                        {(followers || []).length}
+                      </span>
+                      <span className='text-gray-400'>Followers</span>
+                    </div>
+                    <div className='flex items-center space-x-2'>
+                      <UserPlus className='h-5 w-5 text-green-400' />
+                      <span className='text-white font-semibold'>
+                        {(following || []).length}
+                      </span>
+                      <span className='text-gray-400'>Following</span>
+                    </div>
+                    <div className='flex items-center space-x-2'>
+                      <Calendar className='h-5 w-5 text-purple-400' />
+                      <span className='text-gray-400'>
+                        Member since {joinDate}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className='flex flex-wrap justify-center lg:justify-start gap-4'>
+                    {viewingOwnProfile ? (
+                      <Button
+                        className='bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105'
+                        onClick={handleEditClick}
+                      >
+                        <Edit className='h-4 w-4 mr-2' />
+                        Edit Profile
+                      </Button>
+                    ) : (
+                      <Button
+                        className={`px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 ${
+                          isFollowing
+                            ? "bg-gray-700 hover:bg-gray-600 text-white border border-gray-600"
+                            : "bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
+                        }`}
+                        onClick={handleFollowToggle}
+                      >
+                        {isFollowing ? "Following" : "Follow"}
+                      </Button>
+                    )}
+                    <Button
+                      variant='outline'
+                      className='border-gray-600 text-gray-300 hover:bg-gray-700 hover:text-white backdrop-blur-sm px-6 py-3 rounded-xl font-semibold transition-all duration-200 transform hover:scale-105'
+                    >
+                      <Eye className='h-4 w-4 mr-2' />
+                      View Activity
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12'>
+          {/* Stats Section */}
+          <div className='grid grid-cols-1 md:grid-cols-3 gap-6 mb-12'>
             {stats.map((stat, index) => {
               const Icon = stat.icon;
               return (
-                <Card key={index} className='bg-gray-800 border-gray-700'>
-                  <CardContent className='p-6'>
-                    <div className='flex items-center space-x-4'>
-                      <div
-                        className={`p-3 rounded-full bg-gray-700 ${stat.color}`}
-                      >
-                        <Icon className='h-6 w-6' />
-                      </div>
-                      <div>
-                        <p className='text-2xl font-bold text-white'>
-                          {stat.value}
-                        </p>
-                        <p className='text-gray-400'>{stat.label}</p>
-                      </div>
+                <div
+                  key={index}
+                  className={`bg-gradient-to-r ${stat.bgColor} rounded-2xl p-6 border border-gray-700/50 backdrop-blur-sm hover:scale-105 transition-all duration-300`}
+                  style={{ animationDelay: `${index * 0.1}s` }}
+                >
+                  <div className='flex items-center justify-between'>
+                    <div>
+                      <p className='text-3xl font-bold text-white mb-2'>
+                        {stat.value}
+                      </p>
+                      <p className='text-gray-300 font-medium'>{stat.label}</p>
                     </div>
-                  </CardContent>
-                </Card>
+                    <div
+                      className={`p-3 rounded-xl bg-gradient-to-r ${stat.color} bg-opacity-20`}
+                    >
+                      <Icon className={`h-8 w-8 ${stat.iconColor}`} />
+                    </div>
+                  </div>
+                </div>
               );
             })}
           </div>
 
           {/* Recent Activity */}
-          <Card className='bg-gray-800 border-gray-700 mb-8'>
-            <CardHeader>
-              <CardTitle className='text-white'>Recent Activity</CardTitle>
-              <CardDescription className='text-gray-400'>
-                Your latest interactions with movies
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className='space-y-4'>
-                {favorites.slice(0, 3).map((movie) => (
-                  <div
-                    key={movie.id}
-                    className='flex items-center space-x-4 p-4 bg-gray-700 rounded-lg'
-                  >
+          <div className='bg-gray-800/50 backdrop-blur-sm rounded-3xl p-8 border border-gray-700/50 mb-8'>
+            <div className='flex items-center space-x-3 mb-6'>
+              <div className='p-2 bg-green-600/20 rounded-xl'>
+                <Activity className='h-6 w-6 text-green-500' />
+              </div>
+              <div>
+                <h2 className='text-2xl md:text-3xl font-bold text-white'>
+                  Recent Activity
+                </h2>
+                <p className='text-gray-400'>Your latest movie interactions</p>
+              </div>
+            </div>
+
+            <div className='space-y-4'>
+              {favorites.slice(0, 3).map((movie, index) => (
+                <div
+                  key={movie.id}
+                  className='flex items-center space-x-4 p-4 bg-gray-700/50 rounded-2xl hover:bg-gray-700/70 transition-all duration-200 transform hover:scale-[1.02]'
+                  style={{ animationDelay: `${index * 0.1}s` }}
+                >
+                  <div className='relative'>
                     <img
                       src={`https://image.tmdb.org/t/p/w92${movie.poster_path}`}
                       alt={movie.title}
-                      className='w-12 h-16 object-cover rounded'
+                      className='w-16 h-20 object-cover rounded-lg shadow-lg'
                       onError={(e) => {
                         const target = e.target as HTMLImageElement;
                         target.src = "/placeholder.svg";
                       }}
                     />
-                    <div className='flex-1'>
-                      <h4 className='text-white font-medium'>{movie.title}</h4>
-                      <p className='text-gray-400 text-sm'>
-                        Added to favorites
-                      </p>
+                    <div className='absolute -top-2 -right-2 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center'>
+                      <Heart className='h-3 w-3 text-white fill-white' />
                     </div>
-                    <Heart className='h-5 w-5 text-red-500 fill-red-500' />
                   </div>
-                ))}
+                  <div className='flex-1'>
+                    <h4 className='text-white font-semibold text-lg mb-1'>
+                      {movie.title}
+                    </h4>
+                    <p className='text-gray-400 text-sm mb-2'>
+                      Added to favorites
+                    </p>
+                    <div className='flex items-center space-x-2'>
+                      <Star className='h-4 w-4 text-yellow-400 fill-yellow-400' />
+                      <span className='text-yellow-400 font-medium'>
+                        {movie.vote_average.toFixed(1)}
+                      </span>
+                    </div>
+                  </div>
+                  <div className='text-gray-500 text-sm'>
+                    <TrendingUp className='h-4 w-4' />
+                  </div>
+                </div>
+              ))}
 
-                {favorites.length === 0 && (
-                  <div className='text-center py-8'>
-                    <p className='text-gray-400'>No recent activity</p>
-                    <Link
-                      to='/search'
-                      className='text-red-500 hover:text-red-400 text-sm'
-                    >
-                      Start discovering movies
-                    </Link>
+              {favorites.length === 0 && (
+                <div className='text-center py-12'>
+                  <div className='w-20 h-20 bg-gray-700/50 rounded-full flex items-center justify-center mx-auto mb-4'>
+                    <Activity className='h-10 w-10 text-gray-500' />
                   </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+                  <h3 className='text-xl font-semibold text-white mb-2'>
+                    No Activity Yet
+                  </h3>
+                  <p className='text-gray-400 mb-4'>
+                    Start exploring movies to see your activity here
+                  </p>
+                  <Link to='/search'>
+                    <Button className='bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105'>
+                      Discover Movies
+                    </Button>
+                  </Link>
+                </div>
+              )}
+            </div>
+          </div>
 
           {/* Quick Actions */}
-          <Card className='bg-gray-800 border-gray-700'>
-            <CardHeader>
-              <CardTitle className='text-white'>Quick Actions</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4'>
-                <Link to='/favorites'>
-                  <Button
-                    variant='outline'
-                    className='w-full border-gray-600 text-gray-300 hover:bg-gray-700'
-                  >
-                    <Heart className='h-4 w-4 mr-2' />
-                    View Favorites
-                  </Button>
-                </Link>
-                <Link to='/search'>
-                  <Button
-                    variant='outline'
-                    className='w-full border-gray-600 text-gray-300 hover:bg-gray-700'
-                  >
-                    <Plus className='h-4 w-4 mr-2' />
-                    Discover Movies
-                  </Button>
-                </Link>
-                <Button
-                  variant='outline'
-                  className='w-full border-gray-600 text-gray-300 hover:bg-gray-700'
-                >
-                  <Star className='h-4 w-4 mr-2' />
-                  Rate Movies
-                </Button>
+          <div className='bg-gray-800/50 backdrop-blur-sm rounded-3xl p-8 border border-gray-700/50'>
+            <div className='flex items-center space-x-3 mb-6'>
+              <div className='p-2 bg-purple-600/20 rounded-xl'>
+                <Settings className='h-6 w-6 text-purple-500' />
               </div>
-            </CardContent>
-          </Card>
-
-          {editing && (
-            <div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50'>
-              <div className='bg-gray-900 p-8 rounded-lg shadow-lg w-full max-w-md'>
-                <h2 className='text-2xl font-bold text-white mb-4'>
-                  Edit Profile
+              <div>
+                <h2 className='text-2xl md:text-3xl font-bold text-white'>
+                  Quick Actions
                 </h2>
-                <form onSubmit={handleSubmit} className='space-y-4'>
-                  <div className='flex items-center space-x-4'>
-                    <img
-                      src={avatarPreview || "/placeholder.svg"}
-                      alt='Avatar Preview'
-                      className='w-16 h-16 rounded-full object-cover border border-gray-700'
-                    />
-                    <input
-                      type='file'
-                      accept='image/*'
-                      onChange={handleAvatarFileChange}
-                      className='text-gray-300'
-                    />
+                <p className='text-gray-400'>
+                  Shortcuts to your favorite features
+                </p>
+              </div>
+            </div>
+
+            <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4'>
+              <Link to='/favorites'>
+                <Button className='w-full h-16 bg-gradient-to-r from-red-600/20 to-pink-600/20 hover:from-red-600/30 hover:to-pink-600/30 border border-red-500/30 text-white backdrop-blur-sm rounded-xl transition-all duration-200 transform hover:scale-105 hover:shadow-lg'>
+                  <Heart className='h-5 w-5 mr-3 text-red-500' />
+                  <div className='text-left'>
+                    <p className='font-semibold'>View Favorites</p>
+                    <p className='text-sm text-gray-400'>
+                      {favorites.length} movies
+                    </p>
                   </div>
+                </Button>
+              </Link>
+
+              <Link to='/search'>
+                <Button className='w-full h-16 bg-gradient-to-r from-blue-600/20 to-cyan-600/20 hover:from-blue-600/30 hover:to-cyan-600/30 border border-blue-500/30 text-white backdrop-blur-sm rounded-xl transition-all duration-200 transform hover:scale-105 hover:shadow-lg'>
+                  <Plus className='h-5 w-5 mr-3 text-blue-500' />
+                  <div className='text-left'>
+                    <p className='font-semibold'>Discover Movies</p>
+                    <p className='text-sm text-gray-400'>Find new favorites</p>
+                  </div>
+                </Button>
+              </Link>
+
+              <Button className='w-full h-16 bg-gradient-to-r from-yellow-600/20 to-orange-600/20 hover:from-yellow-600/30 hover:to-orange-600/30 border border-yellow-500/30 text-white backdrop-blur-sm rounded-xl transition-all duration-200 transform hover:scale-105 hover:shadow-lg'>
+                <Star className='h-5 w-5 mr-3 text-yellow-500' />
+                <div className='text-left'>
+                  <p className='font-semibold'>Rate Movies</p>
+                  <p className='text-sm text-gray-400'>Share your thoughts</p>
+                </div>
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        {/* Edit Profile Modal */}
+        {editing && (
+          <div className='fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4'>
+            <div className='bg-gray-800/90 backdrop-blur-md rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto'>
+              <div className='p-8'>
+                <div className='flex items-center space-x-3 mb-6'>
+                  <div className='p-2 bg-blue-600/20 rounded-xl'>
+                    <Edit className='h-6 w-6 text-blue-500' />
+                  </div>
+                  <h2 className='text-3xl font-bold text-white'>
+                    Edit Profile
+                  </h2>
+                </div>
+
+                <form onSubmit={handleSubmit} className='space-y-6'>
+                  <div className='flex flex-col items-center space-y-4'>
+                    <div className='relative'>
+                      <img
+                        src={avatarPreview || "/placeholder.svg"}
+                        alt='Avatar Preview'
+                        className='w-24 h-24 rounded-full object-cover border-4 border-blue-500/30 shadow-lg'
+                      />
+                      <div className='absolute -bottom-2 -right-2 w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center cursor-pointer hover:bg-blue-600 transition-colors'>
+                        <Edit className='h-4 w-4 text-white' />
+                      </div>
+                    </div>
+                    <div className='text-center'>
+                      <label className='cursor-pointer bg-gray-700/50 hover:bg-gray-700 text-white px-4 py-2 rounded-xl transition-all duration-200 transform hover:scale-105'>
+                        <input
+                          type='file'
+                          accept='image/*'
+                          onChange={handleAvatarFileChange}
+                          className='hidden'
+                        />
+                        Choose Photo
+                      </label>
+                    </div>
+                  </div>
+
                   <div>
-                    <label className='block text-gray-300 mb-1'>Username</label>
+                    <label className='block text-gray-300 mb-2 font-medium'>
+                      Username
+                    </label>
                     <input
                       type='text'
                       name='username'
                       value={form.username}
                       onChange={handleChange}
-                      className='w-full p-2 rounded bg-gray-800 text-white'
+                      className='w-full p-4 rounded-xl bg-gray-700/50 border border-gray-600 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200'
+                      placeholder='Enter your username'
                       required
                     />
                   </div>
+
                   <div>
-                    <label className='block text-gray-300 mb-1'>
+                    <label className='block text-gray-300 mb-3 font-medium'>
                       Favorite Genres
                     </label>
-                    <div className='flex flex-wrap gap-2'>
+                    <div className='grid grid-cols-2 sm:grid-cols-3 gap-3'>
                       {allGenres.map((genre) => (
                         <button
                           type='button'
                           key={genre.id}
-                          className={`px-3 py-1 rounded-full border text-sm ${form.preferences.favoriteGenres?.includes(genre.id) ? "bg-red-600 text-white border-red-600" : "bg-gray-800 text-gray-300 border-gray-700"}`}
+                          className={`p-3 rounded-xl border text-sm font-medium transition-all duration-200 transform hover:scale-105 ${
+                            form.preferences.favoriteGenres?.includes(genre.id)
+                              ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white border-blue-500 shadow-lg"
+                              : "bg-gray-700/50 text-gray-300 border-gray-600 hover:bg-gray-700"
+                          }`}
                           onClick={() => handleGenreToggle(genre.id)}
                         >
                           {genre.name}
@@ -437,12 +565,18 @@ const Profile = () => {
                       ))}
                     </div>
                   </div>
-                  {error && <p className='text-red-500 text-sm'>{error}</p>}
-                  <div className='flex justify-end space-x-2'>
+
+                  {error && (
+                    <div className='bg-red-500/20 border border-red-500/30 rounded-xl p-4'>
+                      <p className='text-red-400 text-sm'>{error}</p>
+                    </div>
+                  )}
+
+                  <div className='flex flex-col sm:flex-row justify-end space-y-3 sm:space-y-0 sm:space-x-4 pt-4'>
                     <Button
                       type='button'
                       variant='outline'
-                      className='border-gray-600 text-gray-300'
+                      className='border-gray-600 text-gray-300 hover:bg-gray-700 hover:text-white px-6 py-3 rounded-xl transition-all duration-200'
                       onClick={handleCancel}
                       disabled={saving}
                     >
@@ -450,7 +584,7 @@ const Profile = () => {
                     </Button>
                     <Button
                       type='submit'
-                      className='bg-red-600 hover:bg-red-700'
+                      className='bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105'
                       disabled={saving}
                     >
                       {saving ? "Saving..." : "Save Changes"}
@@ -459,8 +593,8 @@ const Profile = () => {
                 </form>
               </div>
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </Layout>
   );

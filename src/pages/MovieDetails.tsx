@@ -47,6 +47,8 @@ const MovieDetails = () => {
   const [reviewRating, setReviewRating] = useState(0);
   const [loadingReviews, setLoadingReviews] = useState(true);
   const [showWatchlistModal, setShowWatchlistModal] = useState(false);
+  const [trailerKey, setTrailerKey] = useState<string | null>(null);
+  const [showTrailer, setShowTrailer] = useState(false);
 
   useEffect(() => {
     const fetchMovie = async () => {
@@ -59,6 +61,17 @@ const MovieDetails = () => {
         if (!res.ok) return;
         const data = await res.json();
         setMovie(data);
+        // Fetch trailer
+        const videoRes = await fetch(
+          `https://api.themoviedb.org/3/movie/${id}/videos?api_key=${apiKey}`
+        );
+        if (videoRes.ok) {
+          const videoData = await videoRes.json();
+          const trailer = videoData.results?.find(
+            (v: any) => v.site === "YouTube" && v.type === "Trailer"
+          );
+          setTrailerKey(trailer ? trailer.key : null);
+        }
       } catch (e) {
         /* ignore */
       }
@@ -287,7 +300,12 @@ const MovieDetails = () => {
 
                   {/* Action Buttons */}
                   <div className='flex flex-wrap justify-center lg:justify-start gap-4'>
-                    <Button size='lg' className='bg-red-600 hover:bg-red-700'>
+                    <Button
+                      size='lg'
+                      className='bg-red-600 hover:bg-red-700'
+                      onClick={() => setShowTrailer(true)}
+                      disabled={!trailerKey}
+                    >
                       <Play className='h-5 w-5 mr-2' />
                       Watch Trailer
                     </Button>
@@ -509,6 +527,27 @@ const MovieDetails = () => {
             movieId={movie.id}
             onMovieAdded={() => setShowWatchlistModal(false)}
           />
+        )}
+        {showTrailer && trailerKey && (
+          <div className='fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-80'>
+            <div className='relative w-full max-w-2xl aspect-video'>
+              <button
+                className='absolute top-2 right-2 z-10 text-white bg-black bg-opacity-50 rounded-full p-2 hover:bg-opacity-80'
+                onClick={() => setShowTrailer(false)}
+              >
+                ✕
+              </button>
+              <iframe
+                width='100%'
+                height='100%'
+                src={`https://www.youtube.com/embed/${trailerKey}?autoplay=1`}
+                title='Movie Trailer'
+                allow='autoplay; encrypted-media'
+                allowFullScreen
+                className='rounded-lg w-full h-full'
+              />
+            </div>
+          </div>
         )}
       </div>
     </Layout>

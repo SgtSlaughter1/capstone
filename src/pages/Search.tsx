@@ -20,9 +20,11 @@ const Search = () => {
   const [sortBy, setSortBy] = useState("popularity");
   const [yearFilter, setYearFilter] = useState("");
   const [ratingFilter, setRatingFilter] = useState("");
+  const [genreFilter, setGenreFilter] = useState("");
   const [results, setResults] = useState<Movie[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
+  const [genres, setGenres] = useState<{ id: number; name: string }[]>([]);
 
   const apiKey = import.meta.env.VITE_TMDB_API_KEY;
 
@@ -34,6 +36,19 @@ const Search = () => {
     }
   }, [searchParams]);
 
+  useEffect(() => {
+    const fetchGenres = async () => {
+      try {
+        const res = await fetch("http://localhost:5000/api/movies/genres/list");
+        const data = await res.json();
+        setGenres(data.genres || []);
+      } catch (err) {
+        setGenres([]);
+      }
+    };
+    fetchGenres();
+  }, []);
+
   const performSearch = async (query: string) => {
     setIsLoading(true);
     try {
@@ -42,6 +57,7 @@ const Search = () => {
       params.append("api_key", apiKey);
       params.append("query", query);
       if (yearFilter) params.append("year", yearFilter);
+      if (genreFilter) params.append("with_genres", genreFilter);
       // TMDB does not support sort_by or rating on search endpoint
 
       const response = await fetch(
@@ -91,6 +107,7 @@ const Search = () => {
     setSortBy("popularity");
     setYearFilter("");
     setRatingFilter("");
+    setGenreFilter("");
   };
 
   const currentYear = new Date().getFullYear();
@@ -208,6 +225,28 @@ const Search = () => {
                         <SelectItem value='8'>8+ Stars</SelectItem>
                         <SelectItem value='7'>7+ Stars</SelectItem>
                         <SelectItem value='6'>6+ Stars</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className='flex-1'>
+                    <label className='block text-sm font-medium text-gray-300 mb-2'>
+                      Genre
+                    </label>
+                    <Select value={genreFilter} onValueChange={setGenreFilter}>
+                      <SelectTrigger className='bg-gray-700 border-gray-600 text-white'>
+                        <SelectValue placeholder='Any genre' />
+                      </SelectTrigger>
+                      <SelectContent className='bg-gray-700 border-gray-600'>
+                        <SelectItem value=''>Any genre</SelectItem>
+                        {genres.map((genre) => (
+                          <SelectItem
+                            key={genre.id}
+                            value={genre.id.toString()}
+                          >
+                            {genre.name}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>

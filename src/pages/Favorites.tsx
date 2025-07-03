@@ -17,6 +17,7 @@ const Favorites = () => {
     addMovieToWatchlist,
     removeMovieFromWatchlist,
     deleteWatchlist,
+    fetchFavorites,
   } = useMovies();
   const { isAuthenticated } = useAuth();
   const [newWatchlistName, setNewWatchlistName] = useState("");
@@ -34,7 +35,10 @@ const Favorites = () => {
   const apiKey = import.meta.env.VITE_TMDB_API_KEY;
 
   useEffect(() => {
-    if (isAuthenticated) fetchWatchlists();
+    if (isAuthenticated) {
+      fetchWatchlists();
+      fetchFavorites();
+    }
   }, [isAuthenticated]);
 
   useEffect(() => {

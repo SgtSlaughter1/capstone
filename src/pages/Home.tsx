@@ -10,111 +10,31 @@ import { Movie } from "@/contexts/MovieContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { api } from "@/lib/utils";
 
-// Mock data for demonstration - replace with actual API calls
-const mockMovies: Movie[] = [
-  {
-    id: 1,
-    title: "Avatar: The Way of Water",
-    overview:
-      "Set more than a decade after the events of the first film, learn the story of the Sully family (Jake, Neytiri, and their kids), the trouble that follows them, the lengths they go to keep each other safe, the battles they fight to stay alive, and the tragedies they endure.",
-    poster_path: "/t6HIqrRAclMCA60NsSmeqe9RmNV.jpg",
-    backdrop_path: "/s16H6tpK2utvwDtzZ8Qy4qm5Emw.jpg",
-    release_date: "2022-12-14",
-    vote_average: 7.6,
-    vote_count: 8234,
-    genre_ids: [878, 12, 28],
-    popularity: 2841.323,
-    adult: false,
-    video: false,
-    original_language: "en",
-    original_title: "Avatar: The Way of Water",
-  },
-  {
-    id: 2,
-    title: "Black Panther: Wakanda Forever",
-    overview:
-      "Queen Ramonda, Shuri, M'Baku, Okoye and the Dora Milaje fight to protect their nation from intervening world powers in the wake of King T'Challa's death.",
-    poster_path: "/sv1xJUazXeYqALzczSZ3O6nkH75.jpg",
-    backdrop_path: "/yYrvN5WFeGYjJnRzhY0QXuo4Isw.jpg",
-    release_date: "2022-11-09",
-    vote_average: 7.3,
-    vote_count: 4521,
-    genre_ids: [28, 12, 18],
-    popularity: 1834.212,
-    adult: false,
-    video: false,
-    original_language: "en",
-    original_title: "Black Panther: Wakanda Forever",
-  },
-  {
-    id: 3,
-    title: "Top Gun: Maverick",
-    overview:
-      "After more than thirty years of service as one of the Navy's top aviators, and dodging the advancement in rank that would ground him, Pete 'Maverick' Mitchell finds himself training a detachment of TOP GUN graduates for a specialized mission the likes of which no living pilot has ever seen.",
-    poster_path: "/62HCnUTziyWcpDaBO2i1DX17ljH.jpg",
-    backdrop_path: "/odJ4hx6g6vBt4lBWKFD1tI8WS4x.jpg",
-    release_date: "2022-05-24",
-    vote_average: 8.3,
-    vote_count: 7892,
-    genre_ids: [28, 18],
-    popularity: 1523.144,
-    adult: false,
-    video: false,
-    original_language: "en",
-    original_title: "Top Gun: Maverick",
-  },
-  {
-    id: 4,
-    title: "The Batman",
-    overview:
-      "In his second year of fighting crime, Batman uncovers corruption in Gotham City that connects to his own family while facing a serial killer known as the Riddler.",
-    poster_path: "/b0PlSFdDwbyK0cf5RxwDpaOJQvQ.jpg",
-    backdrop_path: "/b0PlSFdDwbyK0cf5RxwDpaOJQvQ.jpg",
-    release_date: "2022-03-01",
-    vote_average: 7.8,
-    vote_count: 9234,
-    genre_ids: [80, 18, 53],
-    popularity: 1234.567,
-    adult: false,
-    video: false,
-    original_language: "en",
-    original_title: "The Batman",
-  },
-  {
-    id: 5,
-    title: "Dune",
-    overview:
-      "Paul Atreides, a brilliant and gifted young man born into a great destiny beyond his understanding, must travel to the most dangerous planet in the universe to ensure the future of his family and his people.",
-    poster_path: "/d5NXSklXo0qyIYkgV94XAgMIckC.jpg",
-    backdrop_path: "/iopYFB1b6Bh7FWZh3onQhph1sih.jpg",
-    release_date: "2021-09-15",
-    vote_average: 8.0,
-    vote_count: 12543,
-    genre_ids: [878, 12],
-    popularity: 987.654,
-    adult: false,
-    video: false,
-    original_language: "en",
-    original_title: "Dune",
-  },
-  {
-    id: 6,
-    title: "Spider-Man: No Way Home",
-    overview:
-      "Peter Parker is unmasked and no longer able to separate his normal life from the high-stakes of being a super-hero. When he asks for help from Doctor Strange the stakes become even more dangerous, forcing him to discover what it truly means to be Spider-Man.",
-    poster_path: "/1g0dhYtq4irTY1GPXvft6k4YLjm.jpg",
-    backdrop_path: "/14QbnygCuTO0vl7CAFmPf1fgZfV.jpg",
-    release_date: "2021-12-15",
-    vote_average: 8.4,
-    vote_count: 15678,
-    genre_ids: [28, 12, 878],
-    popularity: 2345.123,
-    adult: false,
-    video: false,
-    original_language: "en",
-    original_title: "Spider-Man: No Way Home",
-  },
-];
+const apiKey = import.meta.env.VITE_TMDB_API_KEY;
+
+const fetchTrendingMovies = async () => {
+  const res = await fetch(
+    `https://api.themoviedb.org/3/trending/movie/week?api_key=${apiKey}`
+  );
+  const data = await res.json();
+  return data.results;
+};
+
+const fetchTopRatedMovies = async () => {
+  const res = await fetch(
+    `https://api.themoviedb.org/3/movie/top_rated?api_key=${apiKey}`
+  );
+  const data = await res.json();
+  return data.results;
+};
+
+const fetchRecentMovies = async () => {
+  const res = await fetch(
+    `https://api.themoviedb.org/3/movie/now_playing?api_key=${apiKey}`
+  );
+  const data = await res.json();
+  return data.results;
+};
 
 const Home = () => {
   const navigate = useNavigate();
@@ -130,23 +50,23 @@ const Home = () => {
     }
   };
 
-  // Mock queries - replace with actual API calls
-  const { data: trendingMovies = mockMovies.slice(0, 6) } = useQuery({
+  // Replace mock queries with real API calls
+  const { data: trendingMovies = [] } = useQuery({
     queryKey: ["trending"],
-    queryFn: () => Promise.resolve(mockMovies.slice(0, 6)),
+    queryFn: fetchTrendingMovies,
   });
 
-  const { data: topRatedMovies = mockMovies.slice(2, 6) } = useQuery({
+  const { data: topRatedMovies = [] } = useQuery({
     queryKey: ["topRated"],
-    queryFn: () => Promise.resolve(mockMovies.slice(2, 6)),
+    queryFn: fetchTopRatedMovies,
   });
 
-  const { data: recentMovies = mockMovies.slice(1, 5) } = useQuery({
+  const { data: recentMovies = [] } = useQuery({
     queryKey: ["recent"],
-    queryFn: () => Promise.resolve(mockMovies.slice(1, 5)),
+    queryFn: fetchRecentMovies,
   });
 
-  const featuredMovie = mockMovies[0];
+  const featuredMovie = trendingMovies[0];
 
   useEffect(() => {
     const fetchRecommendations = async () => {
@@ -168,61 +88,67 @@ const Home = () => {
     <Layout>
       <div className='relative'>
         {/* Hero Section */}
-        <section className='relative h-96 md:h-[500px] lg:h-[600px] overflow-hidden'>
-          <div className='absolute inset-0'>
-            <img
-              src={`https://image.tmdb.org/t/p/original${featuredMovie.backdrop_path}`}
-              alt={featuredMovie.title}
-              className='w-full h-full object-cover'
-              onError={(e) => {
-                const target = e.target as HTMLImageElement;
-                target.src = "/placeholder.svg";
-              }}
-            />
-            <div className='absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent' />
-          </div>
+        {featuredMovie ? (
+          <section className='relative h-96 md:h-[500px] lg:h-[600px] overflow-hidden'>
+            <div className='absolute inset-0'>
+              <img
+                src={`https://image.tmdb.org/t/p/original${featuredMovie.backdrop_path}`}
+                alt={featuredMovie.title}
+                className='w-full h-full object-cover'
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.src = "/placeholder.svg";
+                }}
+              />
+              <div className='absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent' />
+            </div>
 
-          <div className='relative z-10 h-full flex items-center'>
-            <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
-              <div className='max-w-2xl'>
-                <h1 className='text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4'>
-                  {featuredMovie.title}
-                </h1>
-                <p className='text-lg md:text-xl text-gray-300 mb-6 line-clamp-3'>
-                  {featuredMovie.overview}
-                </p>
-                <div className='flex items-center space-x-4 mb-8'>
-                  <div className='flex items-center space-x-1'>
-                    <Star className='h-5 w-5 text-yellow-400 fill-yellow-400' />
-                    <span className='text-white font-medium'>
-                      {featuredMovie.vote_average.toFixed(1)}
-                    </span>
+            <div className='relative z-10 h-full flex items-center'>
+              <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
+                <div className='max-w-2xl'>
+                  <h1 className='text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4'>
+                    {featuredMovie.title}
+                  </h1>
+                  <p className='text-lg md:text-xl text-gray-300 mb-6 line-clamp-3'>
+                    {featuredMovie.overview}
+                  </p>
+                  <div className='flex items-center space-x-4 mb-8'>
+                    <div className='flex items-center space-x-1'>
+                      <Star className='h-5 w-5 text-yellow-400 fill-yellow-400' />
+                      <span className='text-white font-medium'>
+                        {featuredMovie.vote_average.toFixed(1)}
+                      </span>
+                    </div>
+                    <div className='flex items-center space-x-1'>
+                      <Calendar className='h-5 w-5 text-gray-400' />
+                      <span className='text-gray-300'>
+                        {new Date(featuredMovie.release_date).getFullYear()}
+                      </span>
+                    </div>
                   </div>
-                  <div className='flex items-center space-x-1'>
-                    <Calendar className='h-5 w-5 text-gray-400' />
-                    <span className='text-gray-300'>
-                      {new Date(featuredMovie.release_date).getFullYear()}
-                    </span>
-                  </div>
-                </div>
-                <div className='flex space-x-4'>
-                  <Link to={`/movie/${featuredMovie.id}`}>
-                    <Button size='lg' className='bg-red-600 hover:bg-red-700'>
-                      Watch Now
+                  <div className='flex space-x-4'>
+                    <Link to={`/movie/${featuredMovie.id}`}>
+                      <Button size='lg' className='bg-red-600 hover:bg-red-700'>
+                        Watch Now
+                      </Button>
+                    </Link>
+                    <Button
+                      size='lg'
+                      variant='outline'
+                      className='border-white text-white hover:bg-white hover:text-black'
+                    >
+                      More Info
                     </Button>
-                  </Link>
-                  <Button
-                    size='lg'
-                    variant='outline'
-                    className='border-white text-white hover:bg-white hover:text-black'
-                  >
-                    More Info
-                  </Button>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        </section>
+          </section>
+        ) : (
+          <section className='relative h-96 md:h-[500px] lg:h-[600px] flex items-center justify-center bg-gray-900'>
+            <span className='text-white text-xl'>Loading...</span>
+          </section>
+        )}
 
         {/* Search Section */}
         <section className='py-12 bg-gray-800'>

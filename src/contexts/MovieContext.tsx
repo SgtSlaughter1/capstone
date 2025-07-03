@@ -42,6 +42,7 @@ interface MovieContextType {
   removeFromWatchlist: (movieId: number) => void;
   isFavorite: (movieId: number) => boolean;
   isInWatchlist: (movieId: number) => boolean;
+  fetchFavorites: () => Promise<void>;
 }
 
 const MovieContext = createContext<MovieContextType | undefined>(undefined);
@@ -98,11 +99,30 @@ export const MovieProvider: React.FC<MovieProviderProps> = ({ children }) => {
     );
   };
 
-  const addToFavorites = (movie: Movie) => {
+  const fetchFavorites = async () => {
+    const res = await api.get("/users/favorites");
+    const favoriteMovies: Movie[] = [];
+    for (const fav of res.data) {
+      try {
+        const tmdbRes = await fetch(
+          `https://api.themoviedb.org/3/movie/${fav.movieId}?api_key=${import.meta.env.VITE_TMDB_API_KEY}&language=en-US`
+        );
+        if (tmdbRes.ok) {
+          const movie = await tmdbRes.json();
+          favoriteMovies.push(movie);
+        }
+      } catch {}
+    }
+    setFavorites(favoriteMovies);
+  };
+
+  const addToFavorites = async (movie: Movie) => {
+    await api.post("/users/favorites", { movieId: movie.id });
     setFavorites((prev) => [...prev.filter((m) => m.id !== movie.id), movie]);
   };
 
-  const removeFromFavorites = (movieId: number) => {
+  const removeFromFavorites = async (movieId: number) => {
+    await api.delete(`/users/favorites/${movieId}`);
     setFavorites((prev) => prev.filter((m) => m.id !== movieId));
   };
 
@@ -151,6 +171,7 @@ export const MovieProvider: React.FC<MovieProviderProps> = ({ children }) => {
         removeFromWatchlist,
         isFavorite,
         isInWatchlist,
+        fetchFavorites,
       }}
     >
       {children}

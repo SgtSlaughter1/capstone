@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import Layout from '@/components/Layout';
 import { useAuth } from '@/contexts/AuthContext';
 import { useMovies } from '@/contexts/MovieContext';
@@ -10,8 +9,44 @@ import { User, Heart, Plus, Star, Calendar, Edit } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const Profile = () => {
-  const { user, isAuthenticated } = useAuth();
-  const { favorites, watchlist } = useMovies();
+  const { user, isAuthenticated, updateProfile } = useAuth();
+  const { favorites } = useMovies();
+  const [editing, setEditing] = useState(false);
+  const [form, setForm] = useState({
+    username: user?.username || '',
+    avatar_url: user?.avatar_url || '',
+    preferences: user?.preferences || {},
+  });
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleEditClick = () => setEditing(true);
+  const handleCancel = () => {
+    setEditing(false);
+    setForm({
+      username: user?.username || '',
+      avatar_url: user?.avatar_url || '',
+      preferences: user?.preferences || {},
+    });
+    setError('');
+  };
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+    setError('');
+    try {
+      await updateProfile(form);
+      setEditing(false);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setSaving(false);
+    }
+  };
 
   if (!isAuthenticated || !user) {
     return (
@@ -48,8 +83,8 @@ const Profile = () => {
     },
     {
       icon: Plus,
-      label: 'Watchlist',
-      value: watchlist.length,
+      label: 'Watchlist', 
+      value: 0,
       color: 'text-blue-500'
     },
     {
@@ -71,12 +106,12 @@ const Profile = () => {
               <div className="flex items-center space-x-4">
                 <Avatar className="h-20 w-20 bg-red-600">
                   <AvatarFallback className="text-white text-2xl font-bold">
-                    {user.name.charAt(0).toUpperCase()}
+                    {user.username.charAt(0).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1">
                   <CardTitle className="text-2xl text-white mb-2">
-                    {user.name}
+                    {user.username}
                   </CardTitle>
                   <CardDescription className="text-gray-400 mb-4">
                     {user.email}
@@ -86,7 +121,7 @@ const Profile = () => {
                     <span>Member since {joinDate}</span>
                   </div>
                 </div>
-                <Button variant="outline" className="border-gray-600 text-gray-300 hover:bg-gray-700">
+                <Button variant="outline" className="border-gray-600 text-gray-300 hover:bg-gray-700" onClick={handleEditClick}>
                   <Edit className="h-4 w-4 mr-2" />
                   Edit Profile
                 </Button>
@@ -145,7 +180,7 @@ const Profile = () => {
                   </div>
                 ))}
                 
-                {favorites.length === 0 && watchlist.length === 0 && (
+                {favorites.length === 0 && (
                   <div className="text-center py-8">
                     <p className="text-gray-400">No recent activity</p>
                     <Link to="/search" className="text-red-500 hover:text-red-400 text-sm">
@@ -183,6 +218,47 @@ const Profile = () => {
               </div>
             </CardContent>
           </Card>
+
+          {editing && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+              <div className="bg-gray-900 p-8 rounded-lg shadow-lg w-full max-w-md">
+                <h2 className="text-2xl font-bold text-white mb-4">Edit Profile</h2>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div>
+                    <label className="block text-gray-300 mb-1">Username</label>
+                    <input
+                      type="text"
+                      name="username"
+                      value={form.username}
+                      onChange={handleChange}
+                      className="w-full p-2 rounded bg-gray-800 text-white"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-gray-300 mb-1">Avatar URL</label>
+                    <input
+                      type="text"
+                      name="avatar_url"
+                      value={form.avatar_url}
+                      onChange={handleChange}
+                      className="w-full p-2 rounded bg-gray-800 text-white"
+                    />
+                  </div>
+                  {/* Add more fields for preferences as needed */}
+                  {error && <p className="text-red-500 text-sm">{error}</p>}
+                  <div className="flex justify-end space-x-2">
+                    <Button type="button" variant="outline" className="border-gray-600 text-gray-300" onClick={handleCancel} disabled={saving}>
+                      Cancel
+                    </Button>
+                    <Button type="submit" className="bg-red-600 hover:bg-red-700" disabled={saving}>
+                      {saving ? 'Saving...' : 'Save Changes'}
+                    </Button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </Layout>

@@ -13,6 +13,7 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { User, Heart, Plus, Star, Calendar, Edit } from "lucide-react";
 import { Link } from "react-router-dom";
+import axios from "axios";
 
 const Profile = () => {
   const { user, isAuthenticated, updateProfile } = useAuth();
@@ -28,6 +29,10 @@ const Profile = () => {
   const [allGenres, setAllGenres] = useState<{ id: number; name: string }[]>(
     []
   );
+  const [avatarPreview, setAvatarPreview] = useState<string>(
+    form.avatar_url || ""
+  );
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
 
   const handleEditClick = () => setEditing(true);
   const handleCancel = () => {
@@ -88,6 +93,35 @@ const Profile = () => {
 
   const defaultWatchlist = watchlists.find((w) => w.name === "My Watchlist");
   const watchlistCount = defaultWatchlist ? defaultWatchlist.movies.length : 0;
+
+  const handleAvatarFileChange = async (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setAvatarFile(file);
+      setAvatarPreview(URL.createObjectURL(file));
+      // Upload to backend
+      const formData = new FormData();
+      formData.append("avatar", file);
+      try {
+        const token = localStorage.getItem("auth_token");
+        const res = await axios.post(
+          "http://localhost:5000/api/users/avatar",
+          formData,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "multipart/form-data",
+            },
+          }
+        );
+        setForm((prev) => ({ ...prev, avatar_url: res.data.avatar_url }));
+      } catch (err) {
+        // Optionally handle error
+      }
+    }
+  };
 
   if (!isAuthenticated || !user) {
     return (
@@ -289,6 +323,19 @@ const Profile = () => {
                   Edit Profile
                 </h2>
                 <form onSubmit={handleSubmit} className='space-y-4'>
+                  <div className='flex items-center space-x-4'>
+                    <img
+                      src={avatarPreview || "/placeholder.svg"}
+                      alt='Avatar Preview'
+                      className='w-16 h-16 rounded-full object-cover border border-gray-700'
+                    />
+                    <input
+                      type='file'
+                      accept='image/*'
+                      onChange={handleAvatarFileChange}
+                      className='text-gray-300'
+                    />
+                  </div>
                   <div>
                     <label className='block text-gray-300 mb-1'>Username</label>
                     <input
@@ -298,18 +345,6 @@ const Profile = () => {
                       onChange={handleChange}
                       className='w-full p-2 rounded bg-gray-800 text-white'
                       required
-                    />
-                  </div>
-                  <div>
-                    <label className='block text-gray-300 mb-1'>
-                      Avatar URL
-                    </label>
-                    <input
-                      type='text'
-                      name='avatar_url'
-                      value={form.avatar_url}
-                      onChange={handleChange}
-                      className='w-full p-2 rounded bg-gray-800 text-white'
                     />
                   </div>
                   <div>

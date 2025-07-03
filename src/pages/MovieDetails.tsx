@@ -19,6 +19,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { api } from "@/lib/utils";
 import { Movie } from "@/contexts/MovieContext";
+import WatchlistSelectorModal from "@/components/WatchlistSelectorModal";
 
 interface Review {
   _id: string;
@@ -45,6 +46,7 @@ const MovieDetails = () => {
   const [reviewContent, setReviewContent] = useState("");
   const [reviewRating, setReviewRating] = useState(0);
   const [loadingReviews, setLoadingReviews] = useState(true);
+  const [showWatchlistModal, setShowWatchlistModal] = useState(false);
 
   useEffect(() => {
     const fetchMovie = async () => {
@@ -124,40 +126,6 @@ const MovieDetails = () => {
       toast({
         title: "Added to favorites",
         description: `${movie.title} has been added to your favorites`,
-      });
-    }
-  };
-
-  const handleWatchlistToggle = () => {
-    if (!isAuthenticated || !movie) return;
-    if (isInWatchlist(movie.id)) {
-      removeFromWatchlist(movie.id);
-      toast({
-        title: "Removed from watchlist",
-        description: `${movie.title} has been removed from your watchlist`,
-      });
-    } else {
-      addToWatchlist({
-        id: movie.id,
-        title: movie.title,
-        overview: movie.overview,
-        poster_path: movie.poster_path,
-        backdrop_path: movie.backdrop_path,
-        release_date: movie.release_date,
-        vote_average: movie.vote_average,
-        vote_count: movie.vote_count,
-        genre_ids:
-          ((movie as any).genres as Array<{ id: number }>)?.map((g) => g.id) ||
-          [],
-        popularity: movie.popularity || 0,
-        adult: (movie as any).adult || false,
-        video: (movie as any).video || false,
-        original_language: movie.original_language || "",
-        original_title: movie.original_title || "",
-      });
-      toast({
-        title: "Added to watchlist",
-        description: `${movie.title} has been added to your watchlist`,
       });
     }
   };
@@ -343,7 +311,18 @@ const MovieDetails = () => {
                     <Button
                       size='lg'
                       variant='outline'
-                      onClick={handleWatchlistToggle}
+                      onClick={() => {
+                        if (!isAuthenticated) {
+                          toast({
+                            title: "Login Required",
+                            description:
+                              "Please login to add movies to your watchlist",
+                            variant: "destructive",
+                          });
+                          return;
+                        }
+                        setShowWatchlistModal(true);
+                      }}
                       className={`border-gray-600 ${
                         isInWatchlist(movie.id)
                           ? "bg-blue-600 text-white border-blue-600 hover:bg-blue-700"
@@ -523,6 +502,14 @@ const MovieDetails = () => {
             </form>
           )}
         </div>
+        {isAuthenticated && (
+          <WatchlistSelectorModal
+            open={showWatchlistModal}
+            onClose={() => setShowWatchlistModal(false)}
+            movieId={movie.id}
+            onMovieAdded={() => setShowWatchlistModal(false)}
+          />
+        )}
       </div>
     </Layout>
   );

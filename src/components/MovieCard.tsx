@@ -6,6 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Heart, Plus, Star, Calendar } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import WatchlistSelectorModal from "@/components/WatchlistSelectorModal";
 
 interface MovieCardProps {
   movie: Movie;
@@ -23,6 +24,7 @@ const MovieCard: React.FC<MovieCardProps> = ({ movie, size = "medium" }) => {
   } = useMovies();
   const { isAuthenticated } = useAuth();
   const { toast } = useToast();
+  const [showWatchlistModal, setShowWatchlistModal] = React.useState(false);
 
   const handleFavoriteToggle = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -46,32 +48,6 @@ const MovieCard: React.FC<MovieCardProps> = ({ movie, size = "medium" }) => {
       toast({
         title: "Added to favorites",
         description: `${movie.title} has been added to your favorites`,
-      });
-    }
-  };
-
-  const handleWatchlistToggle = (e: React.MouseEvent) => {
-    e.preventDefault();
-    if (!isAuthenticated) {
-      toast({
-        title: "Login Required",
-        description: "Please login to add movies to your watchlist",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (isInWatchlist(movie.id)) {
-      removeFromWatchlist(movie.id);
-      toast({
-        title: "Removed from watchlist",
-        description: `${movie.title} has been removed from your watchlist`,
-      });
-    } else {
-      addToWatchlist(movie);
-      toast({
-        title: "Added to watchlist",
-        description: `${movie.title} has been added to your watchlist`,
       });
     }
   };
@@ -117,7 +93,19 @@ const MovieCard: React.FC<MovieCardProps> = ({ movie, size = "medium" }) => {
                 <Button
                   size='sm'
                   variant='secondary'
-                  onClick={handleWatchlistToggle}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    if (!isAuthenticated) {
+                      toast({
+                        title: "Login Required",
+                        description:
+                          "Please login to add movies to your watchlist",
+                        variant: "destructive",
+                      });
+                      return;
+                    }
+                    setShowWatchlistModal(true);
+                  }}
                   className={`${isInWatchlist(movie.id) ? "bg-blue-600 hover:bg-blue-700" : "bg-gray-800/80 hover:bg-gray-700/80"}`}
                 >
                   <Plus className='h-4 w-4' />
@@ -145,6 +133,14 @@ const MovieCard: React.FC<MovieCardProps> = ({ movie, size = "medium" }) => {
           </div>
         </div>
       </Link>
+      {isAuthenticated && (
+        <WatchlistSelectorModal
+          open={showWatchlistModal}
+          onClose={() => setShowWatchlistModal(false)}
+          movieId={movie.id}
+          onMovieAdded={() => setShowWatchlistModal(false)}
+        />
+      )}
     </div>
   );
 };

@@ -1,22 +1,25 @@
-import express from 'express';
-import jwt from 'jsonwebtoken';
-import User from '../models/User.js';
+import express from "express";
+import jwt from "jsonwebtoken";
+import User from "../models/User.js";
 
 const router = express.Router();
 
 // Register
-router.post('/register', async (req, res) => {
+router.post("/register", async (req, res) => {
   try {
     const { username, email, password } = req.body;
 
     // Check if user already exists
     const existingUser = await User.findOne({
-      $or: [{ email }, { username }]
+      $or: [{ email }, { username }],
     });
 
     if (existingUser) {
       return res.status(400).json({
-        message: existingUser.email === email ? 'Email already registered' : 'Username already taken'
+        message:
+          existingUser.email === email
+            ? "Email already registered"
+            : "Username already taken",
       });
     }
 
@@ -24,11 +27,21 @@ router.post('/register', async (req, res) => {
     const user = new User({ username, email, password });
     await user.save();
 
+    // Create default watchlist for the new user
+    const Watchlist = (await import("../models/Watchlist.js")).default;
+    const defaultWatchlist = new Watchlist({
+      user: user._id,
+      name: "My Watchlist",
+      description: "Your default watchlist",
+      movies: [],
+    });
+    await defaultWatchlist.save();
+
     // Generate JWT token
     const token = jwt.sign(
       { userId: user._id },
-      process.env.JWT_SECRET || 'fallback_secret',
-      { expiresIn: '7d' }
+      process.env.JWT_SECRET || "fallback_secret",
+      { expiresIn: "7d" }
     );
 
     res.status(201).json({
@@ -38,36 +51,36 @@ router.post('/register', async (req, res) => {
         username: user.username,
         email: user.email,
         avatar_url: user.avatar_url,
-        preferences: user.preferences
-      }
+        preferences: user.preferences,
+      },
     });
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 });
 
 // Login
-router.post('/login', async (req, res) => {
+router.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
 
     // Find user by email
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(400).json({ message: 'Invalid credentials' });
+      return res.status(400).json({ message: "Invalid credentials" });
     }
 
     // Check password
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
-      return res.status(400).json({ message: 'Invalid credentials' });
+      return res.status(400).json({ message: "Invalid credentials" });
     }
 
     // Generate JWT token
     const token = jwt.sign(
       { userId: user._id },
-      process.env.JWT_SECRET || 'fallback_secret',
-      { expiresIn: '7d' }
+      process.env.JWT_SECRET || "fallback_secret",
+      { expiresIn: "7d" }
     );
 
     res.json({
@@ -77,11 +90,11 @@ router.post('/login', async (req, res) => {
         username: user.username,
         email: user.email,
         avatar_url: user.avatar_url,
-        preferences: user.preferences
-      }
+        preferences: user.preferences,
+      },
     });
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 });
 

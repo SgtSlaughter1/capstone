@@ -126,25 +126,18 @@ export const MovieProvider: React.FC<MovieProviderProps> = ({ children }) => {
     setFavorites((prev) => prev.filter((m) => m.id !== movieId));
   };
 
-  const addToWatchlist = (movie: Movie) => {
-    setWatchlists((prev) => [
-      ...prev.map((w) => ({
-        ...w,
-        movies: [
-          ...w.movies,
-          { movieId: movie.id, addedAt: new Date().toISOString() },
-        ],
-      })),
-    ]);
+  const addToWatchlist = async (movie: Movie) => {
+    // Find the default watchlist
+    const defaultWatchlist = watchlists.find((w) => w.name === "My Watchlist");
+    if (!defaultWatchlist) return;
+    await addMovieToWatchlist(defaultWatchlist._id, movie.id);
   };
 
-  const removeFromWatchlist = (movieId: number) => {
-    setWatchlists((prev) => [
-      ...prev.map((w) => ({
-        ...w,
-        movies: w.movies.filter((m) => m.movieId !== movieId),
-      })),
-    ]);
+  const removeFromWatchlist = async (movieId: number) => {
+    // Find the default watchlist
+    const defaultWatchlist = watchlists.find((w) => w.name === "My Watchlist");
+    if (!defaultWatchlist) return;
+    await removeMovieFromWatchlist(defaultWatchlist._id, movieId);
   };
 
   const isFavorite = (movieId: number) => {

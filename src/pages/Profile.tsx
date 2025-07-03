@@ -16,7 +16,7 @@ import { Link } from "react-router-dom";
 
 const Profile = () => {
   const { user, isAuthenticated, updateProfile } = useAuth();
-  const { favorites } = useMovies();
+  const { favorites, watchlists } = useMovies();
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({
     username: user?.username || "",
@@ -86,6 +86,9 @@ const Profile = () => {
     }));
   };
 
+  const defaultWatchlist = watchlists.find((w) => w.name === "My Watchlist");
+  const watchlistCount = defaultWatchlist ? defaultWatchlist.movies.length : 0;
+
   if (!isAuthenticated || !user) {
     return (
       <Layout>
@@ -120,7 +123,7 @@ const Profile = () => {
     {
       icon: Plus,
       label: "Watchlist",
-      value: 0,
+      value: watchlistCount,
       color: "text-blue-500",
     },
     {

@@ -21,7 +21,7 @@ app.use('/api/movies', movieRoutes);
 app.use('/api/users', userRoutes);
 
 // MongoDB connection
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/movieapp')
+mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27001/movieapp')
   .then(() => console.log('Connected to MongoDB'))
   .catch((error) => console.error('MongoDB connection error:', error));
 

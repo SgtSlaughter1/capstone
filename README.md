@@ -1,73 +1,66 @@
-# Welcome to your Lovable project
+# Cine Seeker
 
-## Project info
+## Project Overview
 
-**URL**: https://lovable.dev/projects/015cfaac-a444-4212-80d2-506ee00fa3ac
+Cine Seeker is a modern web application that allows users to discover, search, and explore movies. With a beautiful and responsive UI, users can browse trending films, view detailed movie information, and manage their personal watchlist. Cine Seeker is built for movie enthusiasts who want a seamless and interactive experience.
 
-## How can I edit this code?
+## Features
 
-There are several ways of editing your application.
+- Browse trending, popular, and top-rated movies
+- Search for movies by title, genre, or release year
+- View detailed information for each movie (synopsis, cast, ratings, trailers, etc.)
+- Add movies to your personal watchlist
+- Responsive design for mobile and desktop
+- Fast and interactive UI with instant feedback
 
-**Use Lovable**
+## Technologies Used
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/015cfaac-a444-4212-80d2-506ee00fa3ac) and start prompting.
+- **Vite** – Lightning-fast build tool
+- **TypeScript** – Type safety for robust development
+- **React** – Component-based UI
+- **shadcn-ui** – Beautiful, accessible UI components
+- **Tailwind CSS** – Utility-first CSS framework
+- **Radix UI** – Accessible React primitives
+- **React Router** – Client-side routing
+- **Axios** – HTTP client for API requests
+- **Express & Mongoose** – REST API and MongoDB integration
 
-Changes made via Lovable will be committed automatically to this repo.
+## Getting Started
 
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
+To run Cine Seeker locally, make sure you have Node.js & npm installed.
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
+# 1. Clone the repository
 git clone <YOUR_GIT_URL>
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+# 2. Navigate to the project directory
+cd cine-seeker
 
-# Step 3: Install the necessary dependencies.
-npm i
+# 3. Install dependencies
+npm install
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# 4. Start the development server
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+The app will be available at `http://localhost:5173` (or the port shown in your terminal).
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## Deployment
 
-**Use GitHub Codespaces**
+You can deploy Cine Seeker using your favorite platform (Vercel, Netlify, etc.) or by following the instructions in your deployment provider's documentation.
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## Customization
 
-## What technologies are used for this project?
+- To connect to a movie database API (such as TMDB), add your API key to a `.env` file:
+  ```env
+  VITE_MOVIE_API_KEY=your_api_key_here
+  ```
+- For backend features (watchlist, authentication), ensure your backend server is running and update API endpoints as needed.
 
-This project is built with:
+## Contributing
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+Contributions are welcome! Feel free to open issues or submit pull requests to improve the app.
 
-## How can I deploy this project?
+## License
 
-Simply open [Lovable](https://lovable.dev/projects/015cfaac-a444-4212-80d2-506ee00fa3ac) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+This project is licensed under the MIT License.

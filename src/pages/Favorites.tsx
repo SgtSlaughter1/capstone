@@ -16,6 +16,7 @@ const Favorites = () => {
     createWatchlist,
     addMovieToWatchlist,
     removeMovieFromWatchlist,
+    deleteWatchlist,
   } = useMovies();
   const { isAuthenticated } = useAuth();
   const [newWatchlistName, setNewWatchlistName] = useState("");
@@ -24,6 +25,13 @@ const Favorites = () => {
   const [watchlistMovies, setWatchlistMovies] = useState<{
     [movieId: number]: Movie;
   }>({});
+  const [renamingId, setRenamingId] = useState<string | null>(null);
+  const [renameValue, setRenameValue] = useState("");
+  const [movingMovie, setMovingMovie] = useState<{
+    movieId: number;
+    fromId: string;
+  } | null>(null);
+  const apiKey = import.meta.env.VITE_TMDB_API_KEY;
 
   useEffect(() => {
     if (isAuthenticated) fetchWatchlists();
@@ -34,7 +42,7 @@ const Favorites = () => {
       if (watchlistMovies[movieId]) return;
       try {
         const res = await fetch(
-          `https://api.themoviedb.org/3/movie/${movieId}?api_key=YOUR_TMDB_API_KEY&language=en-US`
+          `https://api.themoviedb.org/3/movie/${movieId}?api_key=${apiKey}&language=en-US`
         );
         if (!res.ok) return;
         const data = await res.json();
@@ -59,6 +67,26 @@ const Favorites = () => {
     setNewWatchlistName("");
     setNewWatchlistDesc("");
     setCreating(false);
+  };
+
+  const handleDeleteWatchlist = async (id: string) => {
+    await deleteWatchlist(id);
+  };
+
+  const handleRenameWatchlist = async (id: string) => {
+    // For demo, just update name locally. In production, call backend.
+    // You can add a backend endpoint for renaming if needed.
+    setRenamingId(null);
+  };
+
+  const handleMoveMovie = async (
+    movieId: number,
+    fromId: string,
+    toId: string
+  ) => {
+    await addMovieToWatchlist(toId, movieId);
+    await removeMovieFromWatchlist(fromId, movieId);
+    setMovingMovie(null);
   };
 
   if (!isAuthenticated) {
@@ -203,16 +231,67 @@ const Favorites = () => {
                   >
                     <div className='flex items-center justify-between mb-4'>
                       <div>
-                        <h4 className='text-xl font-bold text-white'>
-                          {watchlist.name}
-                        </h4>
-                        {watchlist.description && (
-                          <p className='text-gray-400 text-sm'>
-                            {watchlist.description}
-                          </p>
+                        {renamingId === watchlist._id ? (
+                          <form
+                            onSubmit={(e) => {
+                              e.preventDefault();
+                              handleRenameWatchlist(watchlist._id);
+                            }}
+                            className='flex space-x-2'
+                          >
+                            <input
+                              type='text'
+                              value={renameValue}
+                              onChange={(e) => setRenameValue(e.target.value)}
+                              className='p-1 rounded bg-gray-700 text-white'
+                            />
+                            <Button
+                              type='submit'
+                              size='sm'
+                              className='bg-blue-600 hover:bg-blue-700'
+                            >
+                              Save
+                            </Button>
+                            <Button
+                              type='button'
+                              size='sm'
+                              variant='outline'
+                              onClick={() => setRenamingId(null)}
+                            >
+                              Cancel
+                            </Button>
+                          </form>
+                        ) : (
+                          <>
+                            <h4 className='text-xl font-bold text-white inline-block mr-2'>
+                              {watchlist.name}
+                            </h4>
+                            {watchlist.description && (
+                              <p className='text-gray-400 text-sm inline-block'>
+                                {watchlist.description}
+                              </p>
+                            )}
+                            <Button
+                              size='sm'
+                              variant='outline'
+                              className='ml-2'
+                              onClick={() => {
+                                setRenamingId(watchlist._id);
+                                setRenameValue(watchlist.name);
+                              }}
+                            >
+                              Rename
+                            </Button>
+                          </>
                         )}
                       </div>
-                      {/* Add delete button if desired */}
+                      <Button
+                        size='sm'
+                        variant='destructive'
+                        onClick={() => handleDeleteWatchlist(watchlist._id)}
+                      >
+                        Delete
+                      </Button>
                     </div>
                     {watchlist.movies.length === 0 ? (
                       <p className='text-gray-400'>
@@ -223,7 +302,61 @@ const Favorites = () => {
                         {watchlist.movies.map((m) => {
                           const movie = watchlistMovies[m.movieId];
                           return movie ? (
-                            <MovieCard key={m.movieId} movie={movie} />
+                            <div key={m.movieId} className='relative'>
+                              <MovieCard movie={movie} />
+                              <div className='absolute top-2 right-2 flex flex-col space-y-1'>
+                                <Button
+                                  size='sm'
+                                  variant='outline'
+                                  onClick={() =>
+                                    removeMovieFromWatchlist(
+                                      watchlist._id,
+                                      m.movieId
+                                    )
+                                  }
+                                >
+                                  Remove
+                                </Button>
+                                <Button
+                                  size='sm'
+                                  variant='outline'
+                                  onClick={() =>
+                                    setMovingMovie({
+                                      movieId: m.movieId,
+                                      fromId: watchlist._id,
+                                    })
+                                  }
+                                >
+                                  Move
+                                </Button>
+                                {movingMovie &&
+                                  movingMovie.movieId === m.movieId &&
+                                  movingMovie.fromId === watchlist._id && (
+                                    <select
+                                      className='mt-1 p-1 rounded bg-gray-700 text-white'
+                                      onChange={(e) =>
+                                        handleMoveMovie(
+                                          m.movieId,
+                                          watchlist._id,
+                                          e.target.value
+                                        )
+                                      }
+                                      defaultValue=''
+                                    >
+                                      <option value='' disabled>
+                                        Select watchlist
+                                      </option>
+                                      {watchlists
+                                        .filter((w) => w._id !== watchlist._id)
+                                        .map((w) => (
+                                          <option key={w._id} value={w._id}>
+                                            {w.name}
+                                          </option>
+                                        ))}
+                                    </select>
+                                  )}
+                              </div>
+                            </div>
                           ) : null;
                         })}
                       </div>

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import Layout from "@/components/Layout";
@@ -17,35 +18,14 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { api } from "@/lib/utils";
+import { Movie } from "@/contexts/MovieContext";
 
-// Mock movie data - replace with actual API call
-const mockMovieDetails = {
-  id: 1,
-  title: "Avatar: The Way of Water",
-  overview:
-    "Set more than a decade after the events of the first film, learn the story of the Sully family (Jake, Neytiri, and their kids), the trouble that follows them, the lengths they go to keep each other safe, the battles they fight to stay alive, and the tragedies they endure. All of this takes place in the beautiful world of Pandora, where new cultures and environments are introduced.",
-  poster_path: "/t6HIqrRAclMCA60NsSmeqe9RmNV.jpg",
-  backdrop_path: "/s16H6tpK2utvwDtzZ8Qy4qm5Emw.jpg",
-  release_date: "2022-12-14",
-  vote_average: 7.6,
-  vote_count: 8234,
-  runtime: 192,
-  genres: [
-    { id: 878, name: "Science Fiction" },
-    { id: 12, name: "Adventure" },
-    { id: 28, name: "Action" },
-  ],
-  director: "James Cameron",
-  cast: [
-    { name: "Sam Worthington", character: "Jake Sully" },
-    { name: "Zoe Saldana", character: "Neytiri" },
-    { name: "Sigourney Weaver", character: "Kiri" },
-    { name: "Stephen Lang", character: "Colonel Quatrich" },
-  ],
-  budget: 460000000,
-  revenue: 2320000000,
-  tagline: "Return to Pandora.",
-};
+interface Review {
+  _id: string;
+  user: { username: string; avatar_url?: string };
+  rating: number;
+  content: string;
+}
 
 const MovieDetails = () => {
   const { id } = useParams<{ id: string }>();
@@ -59,20 +39,37 @@ const MovieDetails = () => {
   } = useMovies();
   const { isAuthenticated } = useAuth();
   const { toast } = useToast();
-  const [reviews, setReviews] = useState<any[]>([]);
-  const [userReview, setUserReview] = useState<any>(null);
+  const [movie, setMovie] = useState<Movie | null>(null);
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [userReview, setUserReview] = useState<Review | null>(null);
   const [reviewContent, setReviewContent] = useState("");
   const [reviewRating, setReviewRating] = useState(0);
   const [loadingReviews, setLoadingReviews] = useState(true);
 
-  // In a real app, you'd fetch movie details based on the ID
-  const movie = mockMovieDetails;
+  useEffect(() => {
+    const fetchMovie = async () => {
+      if (!id) return;
+      try {
+        const apiKey = import.meta.env.VITE_TMDB_API_KEY;
+        const res = await fetch(
+          `https://api.themoviedb.org/3/movie/${id}?api_key=${apiKey}&language=en-US`
+        );
+        if (!res.ok) return;
+        const data = await res.json();
+        setMovie(data);
+      } catch (e) {
+        /* ignore */
+      }
+    };
+    fetchMovie();
+  }, [id]);
 
   useEffect(() => {
     const fetchReviews = async () => {
       setLoadingReviews(true);
       try {
-        const res = await api.get(`/users/reviews/movie/${movie.id}`);
+        const apiKey = import.meta.env.VITE_TMDB_API_KEY;
+        const res = await api.get(`/users/reviews/movie/${movie?.id}`);
         setReviews(res.data);
       } catch (e) {
         setReviews([]);
@@ -82,7 +79,8 @@ const MovieDetails = () => {
     };
     const fetchUserReview = async () => {
       try {
-        const res = await api.get(`/users/reviews/user/${movie.id}`);
+        const apiKey = import.meta.env.VITE_TMDB_API_KEY;
+        const res = await api.get(`/users/reviews/user/${movie?.id}`);
         if (res.data) {
           setUserReview(res.data);
           setReviewContent(res.data.content);
@@ -94,18 +92,10 @@ const MovieDetails = () => {
     };
     fetchReviews();
     if (isAuthenticated) fetchUserReview();
-  }, [movie.id, isAuthenticated]);
+  }, [movie?.id, isAuthenticated]);
 
   const handleFavoriteToggle = () => {
-    if (!isAuthenticated) {
-      toast({
-        title: "Login Required",
-        description: "Please login to add movies to your favorites",
-        variant: "destructive",
-      });
-      return;
-    }
-
+    if (!isAuthenticated || !movie) return;
     if (isFavorite(movie.id)) {
       removeFromFavorites(movie.id);
       toast({
@@ -122,12 +112,14 @@ const MovieDetails = () => {
         release_date: movie.release_date,
         vote_average: movie.vote_average,
         vote_count: movie.vote_count,
-        genre_ids: movie.genres.map((g) => g.id),
-        popularity: 2841.323,
-        adult: false,
-        video: false,
-        original_language: "en",
-        original_title: movie.title,
+        genre_ids:
+          ((movie as any).genres as Array<{ id: number }>)?.map((g) => g.id) ||
+          [],
+        popularity: movie.popularity || 0,
+        adult: (movie as any).adult || false,
+        video: (movie as any).video || false,
+        original_language: movie.original_language || "",
+        original_title: movie.original_title || "",
       });
       toast({
         title: "Added to favorites",
@@ -137,15 +129,7 @@ const MovieDetails = () => {
   };
 
   const handleWatchlistToggle = () => {
-    if (!isAuthenticated) {
-      toast({
-        title: "Login Required",
-        description: "Please login to add movies to your watchlist",
-        variant: "destructive",
-      });
-      return;
-    }
-
+    if (!isAuthenticated || !movie) return;
     if (isInWatchlist(movie.id)) {
       removeFromWatchlist(movie.id);
       toast({
@@ -162,12 +146,14 @@ const MovieDetails = () => {
         release_date: movie.release_date,
         vote_average: movie.vote_average,
         vote_count: movie.vote_count,
-        genre_ids: movie.genres.map((g) => g.id),
-        popularity: 2841.323,
-        adult: false,
-        video: false,
-        original_language: "en",
-        original_title: movie.title,
+        genre_ids:
+          ((movie as any).genres as Array<{ id: number }>)?.map((g) => g.id) ||
+          [],
+        popularity: movie.popularity || 0,
+        adult: (movie as any).adult || false,
+        video: (movie as any).video || false,
+        original_language: movie.original_language || "",
+        original_title: movie.original_title || "",
       });
       toast({
         title: "Added to watchlist",
@@ -189,16 +175,15 @@ const MovieDetails = () => {
       } else {
         // Create review
         await api.post("/users/reviews", {
-          movieId: movie.id,
+          movieId: movie?.id,
           rating: reviewRating,
           content: reviewContent,
         });
         toast({ title: "Review submitted!" });
       }
       // Refresh reviews
-      const res = await api.get(`/users/reviews/movie/${movie.id}`);
+      const res = await api.get(`/users/reviews/movie/${movie?.id}`);
       setReviews(res.data);
-      setUserReview({ rating: reviewRating, content: reviewContent });
     } catch (error: any) {
       toast({
         title: "Error",
@@ -208,8 +193,34 @@ const MovieDetails = () => {
     }
   };
 
-  const backdropUrl = `https://image.tmdb.org/t/p/original${movie.backdrop_path}`;
-  const posterUrl = `https://image.tmdb.org/t/p/w500${movie.poster_path}`;
+  const handleDeleteReview = async () => {
+    if (!userReview) return;
+    try {
+      await api.delete(`/users/reviews/${userReview._id}`);
+      setUserReview(null);
+      setReviewContent("");
+      setReviewRating(0);
+      const res = await api.get(`/users/reviews/movie/${movie?.id}`);
+      setReviews(res.data);
+      toast({ title: "Review deleted!" });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.response?.data?.message || "Failed to delete review",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const backdropUrl = `https://image.tmdb.org/t/p/original${movie?.backdrop_path}`;
+  const posterUrl = `https://image.tmdb.org/t/p/w500${movie?.poster_path}`;
+
+  if (!movie)
+    return (
+      <Layout>
+        <div className='text-center text-white py-20'>Loading movie...</div>
+      </Layout>
+    );
 
   return (
     <Layout>
@@ -260,9 +271,9 @@ const MovieDetails = () => {
                     {movie.title}
                   </h1>
 
-                  {movie.tagline && (
+                  {(movie as any).tagline && (
                     <p className='text-xl text-gray-300 italic mb-4'>
-                      "{movie.tagline}"
+                      "{(movie as any).tagline}"
                     </p>
                   )}
 
@@ -270,29 +281,32 @@ const MovieDetails = () => {
                     <div className='flex items-center space-x-1'>
                       <Star className='h-5 w-5 text-yellow-400 fill-yellow-400' />
                       <span className='text-white font-medium'>
-                        {movie.vote_average.toFixed(1)}
+                        {movie.vote_average?.toFixed(1) || "N/A"}
                       </span>
                       <span className='text-gray-400'>
-                        ({movie.vote_count.toLocaleString()} votes)
+                        ({movie.vote_count?.toLocaleString() || "N/A"} votes)
                       </span>
                     </div>
 
                     <div className='flex items-center space-x-1'>
                       <Calendar className='h-5 w-5 text-gray-400' />
                       <span className='text-gray-300'>
-                        {new Date(movie.release_date).getFullYear()}
+                        {new Date(movie.release_date || "").getFullYear() ||
+                          "N/A"}
                       </span>
                     </div>
 
                     <div className='flex items-center space-x-1'>
                       <Clock className='h-5 w-5 text-gray-400' />
-                      <span className='text-gray-300'>{movie.runtime} min</span>
+                      <span className='text-gray-300'>
+                        {(movie as any).runtime || "N/A"} min
+                      </span>
                     </div>
                   </div>
 
                   {/* Genres */}
                   <div className='flex flex-wrap justify-center lg:justify-start gap-2 mb-6'>
-                    {movie.genres.map((genre) => (
+                    {(movie as any).genres?.map((genre: any) => (
                       <Badge
                         key={genre.id}
                         variant='secondary'
@@ -373,7 +387,9 @@ const MovieDetails = () => {
                   <h3 className='text-xl font-semibold text-white mb-2'>
                     Director
                   </h3>
-                  <p className='text-gray-300'>{movie.director}</p>
+                  <p className='text-gray-300'>
+                    {(movie as any).director || "N/A"}
+                  </p>
                 </div>
 
                 <div>
@@ -381,7 +397,7 @@ const MovieDetails = () => {
                     Cast
                   </h3>
                   <div className='space-y-2'>
-                    {movie.cast.map((actor, index) => (
+                    {(movie as any).cast?.map((actor: any, index: number) => (
                       <div
                         key={index}
                         className='flex justify-between items-center'
@@ -405,25 +421,29 @@ const MovieDetails = () => {
                   <div>
                     <span className='text-gray-400'>Release Date:</span>
                     <span className='text-white ml-2'>
-                      {new Date(movie.release_date).toLocaleDateString()}
+                      {new Date(movie.release_date || "").toLocaleDateString()}
                     </span>
                   </div>
                   <div>
                     <span className='text-gray-400'>Runtime:</span>
                     <span className='text-white ml-2'>
-                      {movie.runtime} minutes
+                      {(movie as any).runtime || "N/A"} minutes
                     </span>
                   </div>
                   <div>
                     <span className='text-gray-400'>Budget:</span>
                     <span className='text-white ml-2'>
-                      ${(movie.budget / 1000000).toFixed(0)}M
+                      {(movie as any).budget
+                        ? `$${((movie as any).budget / 1000000).toFixed(0)}M`
+                        : "N/A"}
                     </span>
                   </div>
                   <div>
                     <span className='text-gray-400'>Revenue:</span>
                     <span className='text-white ml-2'>
-                      ${(movie.revenue / 1000000).toFixed(0)}M
+                      {(movie as any).revenue
+                        ? `$${((movie as any).revenue / 1000000).toFixed(0)}M`
+                        : "N/A"}
                     </span>
                   </div>
                 </div>
@@ -486,9 +506,20 @@ const MovieDetails = () => {
                 onChange={(e) => setReviewContent(e.target.value)}
                 required
               />
-              <Button type='submit' className='bg-red-600 hover:bg-red-700'>
-                {userReview ? "Update Review" : "Submit Review"}
-              </Button>
+              <div className='flex space-x-2'>
+                <Button type='submit' className='bg-red-600 hover:bg-red-700'>
+                  {userReview ? "Update Review" : "Submit Review"}
+                </Button>
+                {userReview && (
+                  <Button
+                    type='button'
+                    variant='destructive'
+                    onClick={handleDeleteReview}
+                  >
+                    Delete
+                  </Button>
+                )}
+              </div>
             </form>
           )}
         </div>

@@ -84,6 +84,16 @@ const Home = () => {
     fetchRecommendations();
   }, [isAuthenticated]);
 
+  const handleNotInterested = async (movieId: number) => {
+    // Optionally, call an endpoint to mark as ignored (not implemented here)
+    setRecommendations((prev) => prev.filter((m) => m.id !== movieId));
+  };
+
+  const handleWhyThis = (movie: Movie) => {
+    // Show a modal or alert explaining the recommendation (simple version)
+    alert(`Recommended because of your ratings, favorites, or similar genres.`);
+  };
+
   return (
     <Layout>
       <div className='relative'>
@@ -270,17 +280,48 @@ const Home = () => {
                     Recommended For You
                   </h2>
                   {loadingRecs ? (
-                    <p className='text-gray-400'>Loading recommendations...</p>
-                  ) : recommendations.length === 0 ? (
-                    <p className='text-gray-400'>
-                      No personalized recommendations yet. Add favorites or set
-                      preferences!
-                    </p>
-                  ) : (
-                    <div className='grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6'>
+                    <div className='text-center py-12'>
+                      <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-red-500 mx-auto'></div>
+                      <p className='text-gray-400 mt-4'>
+                        Loading recommendations...
+                      </p>
+                    </div>
+                  ) : recommendations.length > 0 ? (
+                    <div className='grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6'>
                       {recommendations.map((movie) => (
-                        <MovieCard key={movie.id} movie={movie} />
+                        <div key={movie.id} className='relative'>
+                          <MovieCard movie={movie} />
+                          <div className='absolute top-2 right-2 flex flex-col space-y-1 z-10'>
+                            <Button
+                              size='sm'
+                              variant='outline'
+                              className='text-xs border-gray-600 text-gray-300 hover:bg-gray-800'
+                              onClick={() => handleNotInterested(movie.id)}
+                            >
+                              Not Interested
+                            </Button>
+                            <Button
+                              size='sm'
+                              variant='outline'
+                              className='text-xs border-gray-600 text-gray-300 hover:bg-gray-800'
+                              onClick={() => handleWhyThis(movie)}
+                            >
+                              Why this movie?
+                            </Button>
+                          </div>
+                        </div>
                       ))}
+                    </div>
+                  ) : (
+                    <div className='text-center py-12'>
+                      <Star className='h-16 w-16 text-gray-600 mx-auto mb-4' />
+                      <h3 className='text-xl font-medium text-white mb-2'>
+                        No recommendations yet
+                      </h3>
+                      <p className='text-gray-400'>
+                        Rate or watch more movies to get personalized
+                        recommendations
+                      </p>
                     </div>
                   )}
                 </div>

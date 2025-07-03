@@ -338,4 +338,115 @@ router.post("/avatar", auth, upload.single("avatar"), async (req, res) => {
   }
 });
 
+// Follow or unfollow a user
+router.post("/:id/follow", auth, async (req, res) => {
+  try {
+    const targetUserId = req.params.id;
+    const currentUserId = req.userId;
+    if (targetUserId === currentUserId) {
+      return res.status(400).json({ message: "You cannot follow yourself." });
+    }
+    const targetUser = await User.findById(targetUserId);
+    const currentUser = await User.findById(currentUserId);
+    if (!targetUser || !currentUser) {
+      return res.status(404).json({ message: "User not found." });
+    }
+    const isFollowing = currentUser.following.includes(targetUserId);
+    if (isFollowing) {
+      // Unfollow
+      currentUser.following.pull(targetUserId);
+      targetUser.followers.pull(currentUserId);
+      await currentUser.save();
+      await targetUser.save();
+      return res.json({ following: false });
+    } else {
+      // Follow
+      currentUser.following.addToSet(targetUserId);
+      targetUser.followers.addToSet(currentUserId);
+      await currentUser.save();
+      await targetUser.save();
+      return res.json({ following: true });
+    }
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Error following user", error: error.message });
+  }
+});
+
+// Get followers of a user
+router.get("/:id/followers", async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id).populate(
+      "followers",
+      "_id username avatar_url"
+    );
+    if (!user) return res.status(404).json({ message: "User not found." });
+    res.json({ followers: user.followers });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Error fetching followers", error: error.message });
+  }
+});
+
+// Get following of a user
+router.get("/:id/following", async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id).populate(
+      "following",
+      "_id username avatar_url"
+    );
+    if (!user) return res.status(404).json({ message: "User not found." });
+    res.json({ following: user.following });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Error fetching following", error: error.message });
+  }
+});
+
+// Get a user's public profile by ID
+router.get("/:id", async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id).select("-password");
+    if (!user) return res.status(404).json({ message: "User not found." });
+    res.json(user);
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Error fetching user", error: error.message });
+  }
+});
+
+// Mark a movie as watched
+router.post("/watched/:movieId", auth, async (req, res) => {
+  try {
+    const user = await User.findById(req.userId);
+    if (!user) return res.status(404).json({ message: "User not found." });
+    if (!user.watchedMovies.includes(Number(req.params.movieId))) {
+      user.watchedMovies.push(Number(req.params.movieId));
+      await user.save();
+    }
+    res.json({ watchedMovies: user.watchedMovies });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Error updating watched movies", error: error.message });
+  }
+});
+
+// Get watched movies
+router.get("/watched", auth, async (req, res) => {
+  try {
+    const user = await User.findById(req.userId);
+    if (!user) return res.status(404).json({ message: "User not found." });
+    res.json({ watchedMovies: user.watchedMovies });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Error fetching watched movies", error: error.message });
+  }
+});
+
 export default router;

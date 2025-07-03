@@ -12,11 +12,14 @@ import {
 } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { User, Heart, Plus, Star, Calendar, Edit } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import axios from "axios";
 
 const Profile = () => {
-  const { user, isAuthenticated, updateProfile } = useAuth();
+  const { user: currentUser, isAuthenticated, updateProfile } = useAuth();
+  const { userId } = useParams<{ userId: string }>();
+  const viewingOwnProfile = !userId || userId === currentUser?.id;
+  const [user, setUser] = useState(currentUser);
   const { favorites, watchlists } = useMovies();
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({
@@ -33,6 +36,9 @@ const Profile = () => {
     form.avatar_url || ""
   );
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [followers, setFollowers] = useState([]);
+  const [following, setFollowing] = useState([]);
+  const [isFollowing, setIsFollowing] = useState(false);
 
   const handleEditClick = () => setEditing(true);
   const handleCancel = () => {
@@ -72,10 +78,45 @@ const Profile = () => {
         );
         const data = await res.json();
         setAllGenres(data.genres || []);
-      } catch {}
+      } catch {
+        /* ignore error */
+      }
     };
     fetchGenres();
   }, []);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (viewingOwnProfile) {
+        setUser(currentUser);
+      } else {
+        const res = await axios.get(`/api/users/${userId}`);
+        setUser(res.data);
+      }
+    };
+    const fetchSocial = async () => {
+      const id = viewingOwnProfile ? currentUser.id : userId;
+      const [followersRes, followingRes] = await Promise.all([
+        axios.get(`/api/users/${id}/followers`),
+        axios.get(`/api/users/${id}/following`),
+      ]);
+      setFollowers(followersRes.data.followers);
+      setFollowing(followingRes.data.following);
+      if (!viewingOwnProfile) {
+        // Check if current user is following this user
+        setIsFollowing(
+          Array.isArray(followersRes.data.followers) &&
+            followersRes.data.followers.some(
+              (f: { _id: string }) => f._id === currentUser.id
+            )
+        );
+      }
+    };
+    if (isAuthenticated && user) {
+      fetchProfile();
+      fetchSocial();
+    }
+  }, [userId, isAuthenticated, currentUser]);
 
   const handleGenreToggle = (genreId: number) => {
     setForm((prev) => ({
@@ -121,6 +162,15 @@ const Profile = () => {
         // Optionally handle error
       }
     }
+  };
+
+  const handleFollowToggle = async () => {
+    if (!user) return;
+    const res = await axios.post(`/api/users/${user.id}/follow`);
+    setIsFollowing(res.data.following);
+    // Refetch followers
+    const followersRes = await axios.get(`/api/users/${user.id}/followers`);
+    setFollowers(followersRes.data.followers);
   };
 
   if (!isAuthenticated || !user) {
@@ -188,7 +238,30 @@ const Profile = () => {
                   <CardDescription className='text-gray-400 mb-4'>
                     {user.email}
                   </CardDescription>
-                  <div className='flex items-center space-x-2 text-sm text-gray-500'>
+                  <div className='flex items-center space-x-4 text-sm text-gray-500'>
+                    <div>
+                      <span className='font-bold text-white'>
+                        {(followers || []).length}
+                      </span>{" "}
+                      Followers
+                    </div>
+                    <div>
+                      <span className='font-bold text-white'>
+                        {(following || []).length}
+                      </span>{" "}
+                      Following
+                    </div>
+                  </div>
+                  {!viewingOwnProfile && (
+                    <Button
+                      variant={isFollowing ? "outline" : "default"}
+                      className={`ml-4 ${isFollowing ? "border-gray-600 text-gray-300 hover:bg-gray-700" : "bg-blue-600 hover:bg-blue-700 text-white"}`}
+                      onClick={handleFollowToggle}
+                    >
+                      {isFollowing ? "Unfollow" : "Follow"}
+                    </Button>
+                  )}
+                  <div className='flex items-center space-x-2 text-sm text-gray-500 mt-2'>
                     <Calendar className='h-4 w-4' />
                     <span>Member since {joinDate}</span>
                   </div>

@@ -32,6 +32,7 @@ const App = () => (
               <Route path='/search' element={<Search />} />
               <Route path='/favorites' element={<Favorites />} />
               <Route path='/profile' element={<Profile />} />
+              <Route path='/profile/:userId' element={<Profile />} />
               <Route path='/login' element={<Login />} />
               <Route path='/register' element={<Register />} />
               <Route path='/forgot-password' element={<ForgotPassword />} />

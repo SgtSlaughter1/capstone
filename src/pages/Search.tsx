@@ -193,12 +193,15 @@ const Search = () => {
                     <label className='block text-sm font-medium text-gray-300 mb-2'>
                       Year
                     </label>
-                    <Select value={yearFilter} onValueChange={setYearFilter}>
+                    <Select
+                      value={yearFilter === "" ? "any" : yearFilter}
+                      onValueChange={(v) => setYearFilter(v === "any" ? "" : v)}
+                    >
                       <SelectTrigger className='bg-gray-700 border-gray-600 text-white'>
                         <SelectValue placeholder='Any year' />
                       </SelectTrigger>
                       <SelectContent className='bg-gray-700 border-gray-600'>
-                        <SelectItem value=''>Any year</SelectItem>
+                        <SelectItem value='any'>Any year</SelectItem>
                         {years.map((year) => (
                           <SelectItem key={year} value={year.toString()}>
                             {year}
@@ -213,14 +216,16 @@ const Search = () => {
                       Rating
                     </label>
                     <Select
-                      value={ratingFilter}
-                      onValueChange={setRatingFilter}
+                      value={ratingFilter === "" ? "any" : ratingFilter}
+                      onValueChange={(v) =>
+                        setRatingFilter(v === "any" ? "" : v)
+                      }
                     >
                       <SelectTrigger className='bg-gray-700 border-gray-600 text-white'>
                         <SelectValue placeholder='Any rating' />
                       </SelectTrigger>
                       <SelectContent className='bg-gray-700 border-gray-600'>
-                        <SelectItem value=''>Any rating</SelectItem>
+                        <SelectItem value='any'>Any rating</SelectItem>
                         <SelectItem value='9'>9+ Stars</SelectItem>
                         <SelectItem value='8'>8+ Stars</SelectItem>
                         <SelectItem value='7'>7+ Stars</SelectItem>
@@ -233,12 +238,17 @@ const Search = () => {
                     <label className='block text-sm font-medium text-gray-300 mb-2'>
                       Genre
                     </label>
-                    <Select value={genreFilter} onValueChange={setGenreFilter}>
+                    <Select
+                      value={genreFilter === "" ? "any" : genreFilter}
+                      onValueChange={(v) =>
+                        setGenreFilter(v === "any" ? "" : v)
+                      }
+                    >
                       <SelectTrigger className='bg-gray-700 border-gray-600 text-white'>
                         <SelectValue placeholder='Any genre' />
                       </SelectTrigger>
                       <SelectContent className='bg-gray-700 border-gray-600'>
-                        <SelectItem value=''>Any genre</SelectItem>
+                        <SelectItem value='any'>Any genre</SelectItem>
                         {genres.map((genre) => (
                           <SelectItem
                             key={genre.id}
